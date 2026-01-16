@@ -1,8 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&display=swap');
 @import "tailwindcss";
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  --cloud-gray: #F5F5F7;
+  --silver-gray: #E5E5E5;
+  --jet-black: #1D1D1F;
+  --carbon-gray: #86868B;
+  --primary: #2e616b;
+  --primary-hover: #244d55;
+  --success-green: #4ADE80;
+
+  --font-family-sans: 'Google Sans Flex', sans-serif;
 }
 
 @theme inline {
@@ -10,6 +21,16 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-cloud-gray: var(--cloud-gray);
+  --color-silver-gray: var(--silver-gray);
+  --color-jet-black: var(--jet-black);
+  --color-carbon-gray: var(--carbon-gray);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-success-green: var(--success-green);
+
+  --font-family-sans: var(--font-family-sans);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +43,5 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply font-sans;
 }

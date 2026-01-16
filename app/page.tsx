@@ -1,65 +1,241 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useCallback } from "react";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
+import { FaSpinner, FaCheckCircle, FaShieldAlt } from "react-icons/fa";
+import { FiRefreshCw } from "react-icons/fi";
+
+import { Dropzone } from "@/components/features/dropzone";
+import { FileItem } from "@/components/features/file-item";
+import { Button } from "@/components/ui/button";
+import { ProcessedFileState } from "@/lib/utils";
+import { compressImageToWebP } from "@/lib/compression";
+
+const generateId = () =>
+  typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2) + Date.now().toString(36);
 
 export default function Home() {
+  const [files, setFiles] = useState<ProcessedFileState[]>([]);
+  const [isGeneratingZip, setIsGeneratingZip] = useState(false);
+
+  const handleFilesAdded = useCallback(async (incomingFiles: File[]) => {
+    const newFileStates: ProcessedFileState[] = incomingFiles.map((file) => ({
+      id: generateId(),
+      originalFile: file,
+      processedBlob: null,
+      status: "fila",
+      progress: 0,
+      originalSize: file.size,
+      // URL temporal para la miniatura inicial
+      thumbnailUrl: URL.createObjectURL(file),
+    }));
+
+    // Agregar a la lista existente
+    setFiles((prev) => [...prev, ...newFileStates]);
+
+    // procesamiento para cada archivo nuevo
+    newFileStates.forEach(async (fileState) => {
+      await processFile(fileState.id, fileState.originalFile);
+    });
+  }, []);
+
+  // procesamiento individual
+  const processFile = async (id: string, file: File) => {
+    updateFileState(id, { status: "procesando", progress: 0 });
+
+    try {
+      const compressedBlob = await compressImageToWebP(file, {
+        onProgress: (progress) => {
+          // Actualizar progreso en tiempo real
+          updateFileState(id, { progress: Math.round(progress) });
+        },
+      });
+
+      // Procesamiento exitosoo
+      updateFileState(id, {
+        status: "terminado",
+        progress: 100,
+        processedBlob: compressedBlob,
+        compressedSize: compressedBlob.size,
+        // URL de descarga para el blob resultante
+        downloadUrl: URL.createObjectURL(compressedBlob),
+      });
+    } catch (error) {
+      console.error(`Error procesando archivo ${id}:`, error);
+      updateFileState(id, {
+        status: "error",
+        progress: 0,
+        error: error instanceof Error ? error.message : "Error desconocido",
+      });
+    }
+  };
+
+  // Helper para actualizar el estado de un archivo específico inmutablemente
+  const updateFileState = (
+    id: string,
+    updates: Partial<ProcessedFileState>
+  ) => {
+    setFiles((prevFiles) =>
+      prevFiles.map((f) => (f.id === id ? { ...f, ...updates } : f))
+    );
+  };
+
+  // Limpiar la lista y revocar URLs para evitar memory leaks
+  const handleClearList = () => {
+    files.forEach((f) => {
+      if (f.thumbnailUrl) URL.revokeObjectURL(f.thumbnailUrl);
+      if (f.downloadUrl) URL.revokeObjectURL(f.downloadUrl);
+    });
+    setFiles([]);
+  };
+
+  // Descarga masiva
+  const handleDownloadAll = async () => {
+    const finishedFiles = files.filter(
+      (f) => f.status === "terminado" && f.processedBlob
+    );
+    if (finishedFiles.length === 0) return;
+
+    setIsGeneratingZip(true);
+    try {
+      const zip = new JSZip();
+
+      // Agregar cada archivo WebP al zip
+      finishedFiles.forEach((fileState) => {
+        // Cambiar extensión original a .webp
+        const fileName =
+          fileState.originalFile.name.replace(/\.[^/.]+$/, "") + ".webp";
+        // Asegurar nombres únicos en el zip si hay duplicados
+        let uniqueName = fileName;
+        let counter = 1;
+        while (zip.file(uniqueName)) {
+          uniqueName = fileName.replace(".webp", ` (${counter}).webp`);
+          counter++;
+        }
+
+        if (fileState.processedBlob) {
+          zip.file(uniqueName, fileState.processedBlob);
+        }
+      });
+
+      // Generar el archivo zip
+      const content = await zip.generateAsync({ type: "blob" });
+      saveAs(content, "imagenes-optimizadas.zip");
+    } catch (error) {
+      console.error("Error generando ZIP:", error);
+      alert("Hubo un error al crear el archivo ZIP.");
+    } finally {
+      setIsGeneratingZip(false);
+    }
+  };
+
+  const finishedCount = files.filter((f) => f.status === "terminado").length;
+  const isProcessingAny = files.some(
+    (f) => f.status === "procesando" || f.status === "fila"
+  );
+  const hasFiles = files.length > 0;
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
+    <main className="min-h-screen bg-white pb-6">
+      <div className="container mx-auto px-4 pt-8 lg:pt-16 pb-20 text-center max-w-4xl">
+        <h1 className="text-4xl md:text-5xl font-bold text-primary mb-4">
+          OPTIMIZEIMG
+        </h1>
+        <p className="text-md text-carbon-gray max-w-2xl mx-auto">
+          Comprime y convierte tus imágenes a WebP.
+          <br />
+          Rápido, privado y sin pérdida de calidad.
+        </p>
+      </div>
+
+      <div className="container mx-auto px-4 max-w-3xl">
+        <Dropzone onFilesAdded={handleFilesAdded} />
+
+        {/* Lista de Archivos y estados */}
+        {hasFiles && (
+          <div className="mt-12">
+            <div className="flex items-center gap-2 mb-6 text-jet-black font-medium">
+              {isProcessingAny ? (
+                <>
+                  <FiRefreshCw className="animate-spin text-accent h-5 w-5" />
+                  <h3>Procesando archivos...</h3>
+                </>
+              ) : finishedCount > 0 && finishedCount === files.length ? (
+                <>
+                  <FaCheckCircle className="text-success-green h-5 w-5" />
+                  <h3>Proceso finalizado</h3>
+                </>
+              ) : (
+                <h3>Tus archivos</h3>
+              )}
+              {finishedCount > 0 && !isProcessingAny && (
+                <span className="ml-auto text-sm text-carbon-gray font-normal uppercase tracking-wider">
+                  {finishedCount} ARCHIVOS LISTOS
+                </span>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              {files.map((fileState) => (
+                <FileItem key={fileState.id} fileState={fileState} />
+              ))}
+            </div>
+
+            <div className="mt-8 flex justify-end gap-4 border-t border-silver-gray pt-6">
+              <Button
+                variant="outline"
+                onClick={handleClearList}
+                disabled={isProcessingAny || isGeneratingZip}
+              >
+                Limpiar lista
+              </Button>
+              <Button
+                onClick={handleDownloadAll}
+                disabled={
+                  finishedCount === 0 || isProcessingAny || isGeneratingZip
+                }
+              >
+                {isGeneratingZip ? (
+                  <>
+                    <FaSpinner className="animate-spin mr-2" /> Generando ZIP...
+                  </>
+                ) : (
+                  `Descargar todo (.zip)`
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <footer className="mt-28 px-4 lg:px-20 text-center text-sm text-carbon-gray">
+        <div className="flex flex-wrap justify-between text-center">
+          <div className="flex gap-2 lg:items-center">
+            <FaShieldAlt className="text-lg" />
+            <p>
+              Las imágenes nunca salen de tu navegador. Procesamiento 100%
+              local.
+            </p>
+          </div>
+          <div className="p-4 lg:p-0 w-full lg:w-auto">
+            <a href="#" target="_blank" className="hover:text-primary">
+              GITHUB
+            </a>
+          </div>
+          <div className="w-full lg:w-auto">
             <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              href="https://portfolio-emcahell.vercel.app"
+              target="_blank"
+              className="hover:text-primary"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              @emcahell
+            </a>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </footer>
+    </main>
   );
 }
