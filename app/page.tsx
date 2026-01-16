@@ -221,7 +221,11 @@ export default function Home() {
             </p>
           </div>
           <div className="p-4 lg:p-0 w-full lg:w-auto">
-            <a href="#" target="_blank" className="hover:text-primary">
+            <a
+              href="https://github.com/Emcahell/OPTIMIZEIMG"
+              target="_blank"
+              className="hover:text-primary"
+            >
               GITHUB
             </a>
           </div>
