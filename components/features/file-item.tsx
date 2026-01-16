@@ -69,7 +69,7 @@ export function FileItem({ fileState }: FileItemProps) {
           </p>
 
           {isFinished && (
-            <span className="text-sm font-medium text-accent">{progress}%</span>
+            <span className="text-sm font-medium text-primary/80">{progress}%</span>
           )}
           {hasError && (
             <span className="text-sm font-medium text-red-500">Error</span>
