@@ -47,21 +47,22 @@ export default function Home() {
     updateFileState(id, { status: "procesando", progress: 0 });
 
     try {
-      const compressedBlob = await compressImageToWebP(file, {
+      const compressionResult = await compressImageToWebP(file, {
         onProgress: (progress) => {
           // Actualizar progreso en tiempo real
           updateFileState(id, { progress: Math.round(progress) });
         },
       });
 
-      // Procesamiento exitosoo
+      // Procesamiento exitoso
       updateFileState(id, {
         status: "terminado",
         progress: 100,
-        processedBlob: compressedBlob,
-        compressedSize: compressedBlob.size,
+        processedBlob: compressionResult.blob,
+        compressedSize: compressionResult.blob.size,
+        keptOriginal: compressionResult.keptOriginal,
         // URL de descarga para el blob resultante
-        downloadUrl: URL.createObjectURL(compressedBlob),
+        downloadUrl: URL.createObjectURL(compressionResult.blob),
       });
     } catch (error) {
       console.error(`Error procesando archivo ${id}:`, error);
@@ -103,16 +104,23 @@ export default function Home() {
     try {
       const zip = new JSZip();
 
-      // Agregar cada archivo WebP al zip
+      // Agregar cada archivo al zip (WebP u original)
       finishedFiles.forEach((fileState) => {
-        // Cambiar extensión original a .webp
-        const fileName =
-          fileState.originalFile.name.replace(/\.[^/.]+$/, "") + ".webp";
+        // Usar nombre original si se mantuvo el formato, sino cambiar a .webp
+        const fileName = fileState.keptOriginal 
+          ? fileState.originalFile.name
+          : fileState.originalFile.name.replace(/\.[^/.]+$/, "") + ".webp";
+        
         // Asegurar nombres únicos en el zip si hay duplicados
         let uniqueName = fileName;
         let counter = 1;
+        const extension = fileState.keptOriginal 
+          ? fileName.substring(fileName.lastIndexOf('.'))
+          : ".webp";
+        const baseName = fileName.substring(0, fileName.lastIndexOf('.'));
+        
         while (zip.file(uniqueName)) {
-          uniqueName = fileName.replace(".webp", ` (${counter}).webp`);
+          uniqueName = baseName + ` (${counter})` + extension;
           counter++;
         }
 

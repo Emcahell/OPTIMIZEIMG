@@ -7,7 +7,7 @@ interface CompressionOptions {
 export async function compressImageToWebP(
   file: File,
   { onProgress }: CompressionOptions
-): Promise<Blob> {
+): Promise<{ blob: Blob; keptOriginal: boolean }> {
   const options = {
     // salida a WebP
     fileType: "image/webp",
@@ -23,7 +23,19 @@ export async function compressImageToWebP(
 
   try {
     const compressedBlob = await imageCompression(file, options);
-    return compressedBlob;
+    
+    // Si el archivo comprimido es más grande que el original devolver el original
+    if (compressedBlob.size >= file.size) {
+      return { 
+        blob: file, 
+        keptOriginal: true 
+      };
+    }
+    
+    return { 
+      blob: compressedBlob, 
+      keptOriginal: false 
+    };
   } catch (error) {
     console.error("Error durante la compresión:", error);
     throw error;

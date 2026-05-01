@@ -21,23 +21,32 @@ export function FileItem({ fileState }: FileItemProps) {
     thumbnailUrl,
     downloadUrl,
     error,
+    keptOriginal,
   } = fileState;
 
   const isFinished = status === "terminado";
   const isProcessing = status === "procesando" || status === "fila";
   const hasError = status === "error";
 
-  // Calcular porcentaje de ahorro
+  // Calcular porcentaje de ahorro o mostrar mensaje de original mantenido
   let savingsDoc = null;
   if (isFinished && compressedSize) {
-    const savingsPercent = Math.round(
-      ((originalSize - compressedSize) / originalSize) * 100
-    );
-    savingsDoc = (
-      <span className="text-xs text-success-green font-medium ml-2">
-        (Ahorro del {savingsPercent}%)
-      </span>
-    );
+    if (keptOriginal) {
+      savingsDoc = (
+        <span className="text-xs text-amber-600 font-medium ml-2">
+          (Mantenido original - no se pudo comprimir)
+        </span>
+      );
+    } else {
+      const savingsPercent = Math.round(
+        ((originalSize - compressedSize) / originalSize) * 100
+      );
+      savingsDoc = (
+        <span className="text-xs text-success-green font-medium ml-2">
+          (Ahorro del {savingsPercent}%)
+        </span>
+      );
+    }
   }
 
   return (
@@ -98,7 +107,7 @@ export function FileItem({ fileState }: FileItemProps) {
             <span>{formatBytes(originalSize)}</span>
             <span className="mx-1">→</span>
             <span className="font-semibold text-jet-black">
-              {formatBytes(compressedSize)}
+              {formatBytes(compressedSize)} {keptOriginal ? "(Original)" : "(WebP)"}
             </span>
             {savingsDoc}
           </div>
@@ -115,7 +124,7 @@ export function FileItem({ fileState }: FileItemProps) {
       {isFinished && downloadUrl && (
         <a
           href={downloadUrl}
-          download={`${originalFile.name.split(".")[0]}.webp`}
+          download={keptOriginal ? originalFile.name : `${originalFile.name.split(".")[0]}.webp`}
           className="shrink-0 ml-2 text-primary hover:text-primary-hover transition-colors font-medium text-sm flex items-center gap-1"
         >
           <FaDownload />

@@ -29,4 +29,5 @@ export interface ProcessedFileState {
   thumbnailUrl: string;
   downloadUrl?: string;
   error?: string;
+  keptOriginal?: boolean;
 }
