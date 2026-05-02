@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OPTIMIZEIMG
 
-## Getting Started
+**Herramienta de optimización de imágenes 100% local y privada**
 
-First, run the development server:
+## ¿Qué es OPTIMIZEIMG?
 
+OPTIMIZEIMG es una aplicación web moderna que permite comprimir y convertir imágenes al formato WebP de manera eficiente y segura. Todo el procesamiento se realiza directamente en el navegador.
+
+## Características Principales
+
+- 🔄 **Conversión a WebP**: Transforma imágenes JPEG, PNG y otros formatos a WebP
+- 📉 **Reducción de tamaño**: Comprime imágenes hasta un 70% sin pérdida visible de calidad
+- 🔒 **100% Privado**: Las imágenes nunca salen de tu navegador
+- ⚡ **Procesamiento local**: Sin servidores, sin APIs externas, sin esperas
+- 📱 **Responsive**: Funciona perfectamente en desktop y móviles
+- 🎯 **Inteligente**: Mantiene el archivo original si la compresión no reduce el tamaño
+
+## ¿Por qué optimizar imágenes?
+
+Las imágenes representan más del 50% del peso total de las páginas web. Optimizarlas mejora:
+
+- **Velocidad de carga**: Sitios más rápidos
+- **Experiencia de usuario**: Mejor rendimiento
+- **SEO**: Google favorece sitios rápidos
+- **Ancho de banda**: Menor consumo de datos
+- **Costos de hosting**: Menos almacenamiento necesario
+
+## Privacidad y Seguridad
+
+- ✅ Sin subida a servidores
+- ✅ Sin almacenamiento en la nube
+- ✅ Sin tracking de imágenes
+- ✅ Procesamiento 100% local
+- ✅ Archivos eliminados al cerrar la pestaña
+
+## Tecnologías Utilizadas
+
+### Frontend Framework
+- **Next.js 16.1.2**: Framework React para aplicaciones web modernas
+- **React 19.2.3**: Biblioteca para construir interfaces de usuario
+- **TypeScript 5**: Tipado estático para mayor robustez
+
+### Estilos y UI
+- **TailwindCSS 4**: Framework CSS para diseño rápido y responsive
+- **Lucide Icons**: Iconos modernos y consistentes
+
+### Procesamiento de Imágenes
+- **browser-image-compression 2.0.2**: Librería principal para compresión
+- **FileReader API**: Lectura local de archivos
+
+### Manejo de Archivos
+- **File-Saver 2.0.5**: Descarga de archivos procesados
+- **JSZip 3.10.1**: Creación de archivos ZIP para descargas masivas
+- **React-Dropzone 14.3.8**: Componente para arrastrar y soltar archivos
+
+### Utilidades
+- **clsx 2.1.1**: Utilidades para clases condicionales
+- **tailwind-merge 3.4.0**: Fusión inteligente de clases Tailwind
+
+## Formatos Soportados
+
+### Entrada
+- JPEG/JPG
+- PNG
+- WebP
+- BMP
+
+### Salida
+- WebP (formato moderno con excelente compresión)
+- Original (si la compresión no es beneficiosa)
+
+## Características Técnicas
+
+### Compresión Inteligente
+- Comparación automática de tamaños
+- Mantención del original si WebP es más grande
+- Calidad ajustable (0.8 por defecto)
+
+### Diagnóstico
+- Verificación de soporte WebP
+- Pruebas de descarga múltiples
+- Validación de archivos
+
+## Instalación y Uso
+
+### Desarrollo
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Producción
+```bash
+npm run build
+npm start
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Acceso
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+La aplicación está disponible en: https://optimizeimg.vercel.app
 
-## Learn More
+## Licencia
 
-To learn more about Next.js, take a look at the following resources:
+MIT License - Libre para uso comercial y personal
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Contribuciones
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+¡Las contribuciones son bienvenidas! Por favor abre un issue para sugerencias o reportes de bugs.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**OPTIMIZEIMG** - Optimización de imágenes simple, segura y eficiente.
